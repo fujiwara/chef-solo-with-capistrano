@@ -1,6 +1,6 @@
 # chef-solo with capistrano
 
-chef-solo を capistorano で実行する例
+chef-solo を capistrano で実行する例
 
 ## 前提
 
@@ -78,3 +78,8 @@ roles/{hostname}.json が、base.json に上書きされてそれぞれのホス
      ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Running report handlers
      ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Report handlers complete
         command finished in 861ms
+
+## License
+
+* The MIT License (MIT)
+* Copyright (c) 2012- FUJIWARA Shunichiro
