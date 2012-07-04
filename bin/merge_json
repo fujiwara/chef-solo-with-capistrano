@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require "rubygems"
+require "json"
+
+base = JSON.parse( open(ARGV[0]).read )
+host = JSON.parse( open(ARGV[1]).read )
+
+merged = base.merge(host) { |key, self_val, other_val|
+  if key.to_s == "run_list"
+    (self_val + other_val).uniq
+  else
+    other_val
+  end
+}
+puts JSON.pretty_generate(merged)

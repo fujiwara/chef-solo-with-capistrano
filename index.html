@@ -1,0 +1,87 @@
+<h1>chef-solo with capistrano</h1>
+
+<p>chef-solo を capistorano で実行する例</p>
+
+<h2>前提</h2>
+
+<ul>
+<li>chef-solo が各ホストにインストール済み</li>
+<li>capistrano をするホストから各ホストに ssh でログインできる</li>
+</ul>
+
+<h2>設定</h2>
+
+<p>config/deploy.rb でファイルを配置するディレクトリを指定。</p>
+
+<pre><code>set :chef_dir,    "/root/chef"
+</code></pre>
+
+<p>roles/base.json で定義された hosts に対して実行される。</p>
+
+<pre><code>{
+  "hosts": {
+    "web01": "192.168.1.101",
+    "web02": "192.168.1.102"
+  },
+  "nameservers": [ "192.168.1.1", "8.8.8.8" ]
+  "run_list": [
+    "os-defaults"
+  ]
+}
+</code></pre>
+
+<p>roles/{hostname}.json が、base.json に上書きされてそれぞれのホストで chef-solo が実行される。</p>
+
+<ul>
+<li>run_list は base.json + {hostname}.json の内容が連結される</li>
+<li>それ以外の key が重複した場合は {hostname}.json の内容が使用される</li>
+</ul>
+
+<h2>実行</h2>
+
+<pre><code># cd /root/chef
+# cap -T
+cap chef:run_chef # run chef-solo
+cap chef:sync     # rsync /root/chef
+cap invoke        # Invoke a single command on the remote servers.
+cap shell         # Begin an interactive Capistrano session.
+
+# cap chef
+  * executing `chef'
+  * executing `chef:init_config'
+  * executing `chef:sync'
+  * executing `chef:merge_json'
+  * executing "cd /root/chef &amp;&amp; export HOST=`hostname -s`; ./bin/merge_json roles/base.json roles/${HOST}.json &gt; config/self.json"
+    servers: ["sl6", "centos5"]
+    [sl6] executing command
+    [centos5] executing command
+    command finished in 89ms
+  * executing `chef:run_chef'
+  * executing "chef-solo -c /root/chef/config/solo.rb -j /root/chef/config/self.json"
+    servers: ["web01", "web02"]
+    [web02] executing command
+    [web01] executing command
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: *** Chef 10.12.0 ***
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: *** Chef 10.12.0 ***
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Setting the run_list to ["os-defaults"] from JSON
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Run List is [recipe[os-defaults]]
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Run List expands to [os-defaults]
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Starting Chef Run for web02
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Running start handlers
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Start handlers complete.
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Processing template[/etc/resolv.conf] action create (os-defaults::default line 2)
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Chef Run complete in 0.006611 seconds
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Running report handlers
+ ** [out :: web02] [2012-07-04T19:33:46+09:00] INFO: Report handlers complete
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Setting the run_list to ["os-defaults"] from JSON
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Run List is [recipe[os-defaults]]
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Run List expands to [os-defaults]
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Starting Chef Run for web01
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Running start handlers
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Start handlers complete.
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Processing template[/etc/resolv.conf] action create (os-defaults::default line 2)
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Chef Run complete in 0.010748 seconds
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Running report handlers
+ ** [out :: web01] [2012-07-04T19:33:46+09:00] INFO: Report handlers complete
+    command finished in 861ms
+</code></pre>
