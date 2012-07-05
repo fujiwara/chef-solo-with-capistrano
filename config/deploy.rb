@@ -1,13 +1,25 @@
+require "json"
+
 set :application, "chef-solo"
 set :chef_dir,    "/root/chef"
 set :hostname,    `hostname -s`.chomp
+set :json_dir,    "#{chef_dir}/json"
+set :config_dir,  "#{chef_dir}/config"
+set :bin_dir,     "#{chef_dir}/bin"
+set :base,        JSON.parse( File::open("#{json_dir}/base.json").read )
 
-require "json"
-JSON.parse( open("#{chef_dir}/json/base.json").read )["hosts"].keys.each do |host|
-  role :host, host
+if exists? :hosts
+  hosts.split(",").each do |host|
+    role :host, host
+  end
+else
+  base["hosts"].keys.sort.each do |host|
+    role :host, host
+  end
 end
 
 namespace :chef do
+
   task :default do
     init_config
     sync
@@ -16,7 +28,7 @@ namespace :chef do
   end
 
   task :init_config do
-    File::open("#{chef_dir}/config/solo.rb", "w") {|f|
+    File::open("#{config_dir}/solo.rb", "w") {|f|
       f.puts "file_cache_path '/tmp/chef-solo'"
       f.puts "cookbook_path   '#{chef_dir}/cookbooks'"
       f.puts "node_name       `hostname -s`.chomp"
@@ -24,12 +36,12 @@ namespace :chef do
   end
 
   task :merge_json, :roles => :host do
-    run "cd #{chef_dir} && export HOST=`hostname -s`; ./bin/merge_json json/base.json json/${HOST}.json > config/self.json"
+    run "export HOST=`hostname -s`; #{bin_dir}/merge_json #{json_dir}/base.json #{json_dir}/${HOST}.json > #{config_dir}/self.json"
   end
 
   desc "run chef-solo"
   task :run_chef, :roles => :host do
-    run "chef-solo -c #{chef_dir}/config/solo.rb -j #{chef_dir}/config/self.json"
+    run "chef-solo -c #{config_dir}/solo.rb -j #{config_dir}/self.json"
   end
 
   desc "rsync #{chef_dir}"
