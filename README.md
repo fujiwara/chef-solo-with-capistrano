@@ -31,9 +31,10 @@ json/{hostname}.json が、base.json に上書きされてそれぞれのホス�
 * run_list は base.json + {hostname}.json の内容が連結される
 * それ以外の key が重複した場合は {hostname}.json の内容が使用される
 
-## 実行
+特定のホストのみ実行したい場合は `cap -S hosts=web01,web02 chef` のように引数 -S hosts に "," 区切りの値を指定する。
 
-    # cd /root/chef
+## 実行例
+
     # cap -T
     cap chef:run_chef # run chef-solo
     cap chef:sync     # rsync /root/chef
