@@ -13,7 +13,7 @@ config/deploy.rb でファイルを配置するディレクトリを指定。
 
     set :chef_dir,    "/root/chef"
 
-roles/base.json で定義された hosts に対して実行される。
+json/base.json で定義された hosts に対して実行される。
 
     {
       "hosts": {
@@ -26,7 +26,7 @@ roles/base.json で定義された hosts に対して実行される。
       ]
     }
 
-roles/{hostname}.json が、base.json に上書きされてそれぞれのホストで chef-solo が実行される。
+json/{hostname}.json が、base.json に上書きされてそれぞれのホストで chef-solo が実行される。
 
 * run_list は base.json + {hostname}.json の内容が連結される
 * それ以外の key が重複した場合は {hostname}.json の内容が使用される
@@ -45,7 +45,7 @@ roles/{hostname}.json が、base.json に上書きされてそれぞれのホス
       * executing `chef:init_config'
       * executing `chef:sync'
       * executing `chef:merge_json'
-      * executing "cd /root/chef && export HOST=`hostname -s`; ./bin/merge_json roles/base.json roles/${HOST}.json > config/self.json"
+      * executing "cd /root/chef && export HOST=`hostname -s`; ./bin/merge_json json/base.json json/${HOST}.json > config/self.json"
         servers: ["web01", "app01"]
         [web01] executing command
         [app01] executing command
